@@ -16,6 +16,7 @@ CINZA_FUNDO = (100, 100, 100)
 jogador1_rect = pygame.Rect(350, 250, 50, 100) 
 jogador2_rect = pygame.Rect(400, 250, 50, 100)
 velocidade = 1
+estado_jogo = "ANDANDO"
 
 clock = pygame.time.Clock() #Devo controlar a velocidade dos frames
 
@@ -26,8 +27,12 @@ while rodando:
         if event.type == pygame.QUIT:
             rodando = False
     
-    jogador1_rect.x = jogador1_rect.x - velocidade
-    jogador2_rect.x = jogador2_rect.x + velocidade
+    if estado_jogo == "ANDANDO":
+        jogador1_rect.x = jogador1_rect.x - velocidade
+        jogador2_rect.x = jogador2_rect.x + velocidade
+        if jogador1_rect.left < 100 or jogador2_rect.right > 700:
+            print("Parados! Esperando o sinal...")
+            estado_jogo = "ESPERANDO"
     tela.fill(CINZA_FUNDO)
     pygame.draw.rect(tela, BRANCO, jogador1_rect)
     pygame.draw.rect(tela, BRANCO, jogador2_rect)
