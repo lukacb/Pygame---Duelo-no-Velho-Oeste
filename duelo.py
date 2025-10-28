@@ -20,25 +20,32 @@ CINZA_FUNDO = (100, 100, 100)
 VERDE = (0,255,0)
 
 # --- 5. Variáveis Principais do Jogo ---
-jogador1_rect = pygame.Rect(350, 250, 50, 100) 
-jogador2_rect = pygame.Rect(400, 250, 50, 100)
+jogador1_rect = pygame.Rect(350, 480, 50, 100) 
+jogador2_rect = pygame.Rect(400, 480, 50, 100)
 velocidade = 1
 estado_jogo = "ANDANDO"
 vencedor = None 
-fonte_vencedor = pygame.font.Font(None,60)
+fonte_vencedor = pygame.font.Font(None,45)
 tempo_sinal = random.uniform(3.0,5.0)
 print(f"Tempo sorteado: {tempo_sinal} segundos")
 
 tempo_inicio_espera = 0
 sinal_ativo = False 
 
-fundo_img = pygame.image.load("fundooeste.png").convert()
-cowboy1_img = pygame.image.load("cowboy1.png").convert_alpha()
-cowboy2_img = pygame.image.load("cowboy2.png").convert_alpha()
+fundo_img_original = pygame.image.load("fundooestenovo.png").convert()
+fundo_img = pygame.transform.scale(fundo_img_original, (largura_tela, altura_tela))
 
-tamanho_cowboy = (jogador1_rect.width, jogador1_rect.height)
-cowboy_img_redimens = pygame.transform.scale(cowboy1_img, tamanho_cowboy)
-cowboy_img_redimens = pygame.transform.scale(cowboy2_img, tamanho_cowboy)
+cowboybase = pygame.image.load("cowboy1.png").convert_alpha()
+tamanhojogador = cowboybase.get_size()
+jogador1_img = cowboybase 
+jogador2_img = pygame.transform.flip(cowboybase, True, False)
+pos_y = 250
+poxx_jogador1 = 350
+posx_jogador2 = 400 
+
+
+
+
 
 clock = pygame.time.Clock() 
 
@@ -74,9 +81,9 @@ while rodando:
     # --- 6b. Lógica do Jogo (Atualização de Variáveis) ---
 
     if estado_jogo == "ANDANDO":
-        jogador1_rect.x = jogador1_rect.x - velocidade
-        jogador2_rect.x = jogador2_rect.x + velocidade
-        if jogador1_rect.left < 100 or jogador2_rect.right > 700:
+        jogador1_rect.x = jogador1_rect.x + velocidade
+        jogador2_rect.x = jogador2_rect.x - velocidade
+        if jogador1_rect.left > 100 and jogador2_rect.right < 700:
             print("Parados! Esperando o sinal...")
             estado_jogo = "ESPERANDO"
             tempo_inicio_espera = pygame.time.get_ticks()
@@ -93,12 +100,9 @@ while rodando:
         tela.fill(VERDE)
     else:
         tela.blit(fundo_img, (0,0))
-    tela.blit(cowboy1_img, jogador1_rect)
-    tela.blit(cowboy2_img, jogador2_rect)
+    tela.blit(jogador1_img, jogador1_rect)
+    tela.blit(jogador2_img, jogador2_rect)
 
-
-    pygame.draw.rect(tela, BRANCO, jogador1_rect)
-    pygame.draw.rect(tela, BRANCO, jogador2_rect)
     if estado_jogo == "FIM":
         texto_surface = fonte_vencedor.render(f"VENCEDOR: {vencedor}", True, BRANCO)
         texto_rect = texto_surface.get_rect(center=(largura_tela/2,altura_tela/2))
