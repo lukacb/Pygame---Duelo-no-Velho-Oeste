@@ -1,34 +1,42 @@
+# --- 1. Importação das Bibliotecas ---
 import pygame
 import random
 
+# --- 2. Inicialização do Pygame ---
 pygame.init()
+pygame.font.init()
 
+# --- 3. Configurações da Tela ---
 largura_tela = 800
 altura_tela = 600
 
 tela = pygame.display.set_mode((largura_tela, altura_tela)) #Superficie principal onde tudo será desenhado
 pygame.display.set_caption("Duelo no Velho-Oeste")
 
+# --- 4. Constantes de Cor (R, G, B) ---
 PRETO = (0, 0, 0)
 BRANCO = (255, 255, 255)
 CINZA_FUNDO = (100, 100, 100)
 VERDE = (0,255,0)
 
+# --- 5. Variáveis Principais do Jogo ---
 jogador1_rect = pygame.Rect(350, 250, 50, 100) 
 jogador2_rect = pygame.Rect(400, 250, 50, 100)
 velocidade = 1
 estado_jogo = "ANDANDO"
 vencedor = None 
+fonte_vencedor = pygame.font.Font(None,60)
 tempo_sinal = random.uniform(3.0,5.0)
 print(f"Tempo sorteado: {tempo_sinal} segundos")
 
 tempo_inicio_espera = 0
 sinal_ativo = False 
 
-clock = pygame.time.Clock() #Devo controlar a velocidade dos frames
+clock = pygame.time.Clock() 
 
 rodando = True
 while rodando:
+    # --- 6a. Processamento de Eventos (Inputs do Usuário) ---
     for event in pygame.event.get():
         
         if event.type == pygame.QUIT:
@@ -55,6 +63,8 @@ while rodando:
                     vencedor = "Jogador 1 (J2 se antecipou)"
                     estado_jogo = "FIM"   
     
+    # --- 6b. Lógica do Jogo (Atualização de Variáveis) ---
+
     if estado_jogo == "ANDANDO":
         jogador1_rect.x = jogador1_rect.x - velocidade
         jogador2_rect.x = jogador2_rect.x + velocidade
@@ -78,7 +88,12 @@ while rodando:
 
     pygame.draw.rect(tela, BRANCO, jogador1_rect)
     pygame.draw.rect(tela, BRANCO, jogador2_rect)
-    pygame.display.flip() #Atualiza a tela
+    if estado_jogo == "FIM":
+        texto_surface = fonte_vencedor.render(f"VENCEDOR: {vencedor}", True, BRANCO)
+        texto_rect = texto_surface.get_rect(center=(largura_tela/2,altura_tela/2))
+        tela.blit(texto_surface, texto_rect)
+        
+    pygame.display.flip() 
 
     clock.tick(60)
 
