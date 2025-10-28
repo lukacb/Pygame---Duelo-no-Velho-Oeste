@@ -32,14 +32,13 @@ print(f"Tempo sorteado: {tempo_sinal} segundos")
 tempo_inicio_espera = 0
 sinal_ativo = False 
 
-fundo_img = pygame.image.load("fundo_oeste.png").convert()
-cowboy_base_img = pygame.image.load("cowboy.png").convert_alpha()
+fundo_img = pygame.image.load("fundooeste.png").convert()
+cowboy1_img = pygame.image.load("cowboy1.png").convert_alpha()
+cowboy2_img = pygame.image.load("cowboy2.png").convert_alpha()
 
 tamanho_cowboy = (jogador1_rect.width, jogador1_rect.height)
-cowboy_img_redimens = pygame.transform.scale(cowboy_base_img, tamanho_cowboy)
-
-cowboy1_img = cowboy_img_redimens
-cowboy2_img = cowboy_img_redimens
+cowboy_img_redimens = pygame.transform.scale(cowboy1_img, tamanho_cowboy)
+cowboy_img_redimens = pygame.transform.scale(cowboy2_img, tamanho_cowboy)
 
 clock = pygame.time.Clock() 
 
@@ -93,7 +92,10 @@ while rodando:
     if sinal_ativo == True:
         tela.fill(VERDE)
     else:
-        tela.fill(CINZA_FUNDO)
+        tela.blit(fundo_img, (0,0))
+    tela.blit(cowboy1_img, jogador1_rect)
+    tela.blit(cowboy2_img, jogador2_rect)
+
 
     pygame.draw.rect(tela, BRANCO, jogador1_rect)
     pygame.draw.rect(tela, BRANCO, jogador2_rect)
