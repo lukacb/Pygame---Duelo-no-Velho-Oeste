@@ -18,6 +18,7 @@ jogador1_rect = pygame.Rect(350, 250, 50, 100)
 jogador2_rect = pygame.Rect(400, 250, 50, 100)
 velocidade = 1
 estado_jogo = "ANDANDO"
+vencedor = None 
 tempo_sinal = random.uniform(3.0,5.0)
 print(f"Tempo sorteado: {tempo_sinal} segundos")
 
@@ -28,10 +29,31 @@ clock = pygame.time.Clock() #Devo controlar a velocidade dos frames
 
 rodando = True
 while rodando:
-
     for event in pygame.event.get():
+        
         if event.type == pygame.QUIT:
             rodando = False
+    
+        if event.type == pygame.KEYDOWN:
+            if estado_jogo == "SINAL" and vencedor is None:
+                if event.key == pygame.K_a: # Tecla 'a'
+                    print("JOGADOR 1 VENCEU!")
+                    vencedor = "Jogador 1"
+                    estado_jogo = "FIM"
+                if event.key == pygame.K_l: # Tecla 'l'
+                    print("JOGADOR 2 VENCEU!")
+                    vencedor = "Jogador 2"
+                    estado_jogo = "FIM"
+
+            elif estado_jogo == "ESPERANDO":
+                if event.key == pygame.K_a:
+                    print("JOGADOR 1 SE ANTECIPOU! JOGADOR 2 VENCEU!")
+                    vencedor = "Jogador 2 (J1 se antecipou)"
+                    estado_jogo = "FIM"
+                if event.key == pygame.K_l:
+                    print("JOGADOR 2 SE ANTECIPOU! JOGADOR 1 VENCEU!")
+                    vencedor = "Jogador 1 (J2 se antecipou)"
+                    estado_jogo = "FIM"   
     
     if estado_jogo == "ANDANDO":
         jogador1_rect.x = jogador1_rect.x - velocidade
