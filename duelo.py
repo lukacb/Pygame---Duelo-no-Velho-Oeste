@@ -33,8 +33,20 @@ jogador1_img = cowboybase
 jogador2_img = pygame.transform.flip(cowboybase, True, False)
 
 # --- Retângulos dos jogadores ---
-jogador1_rect = pygame.Rect(350, 480, 50, 100)
-jogador2_rect = pygame.Rect(400, 480, 50, 100)
+# 1. Pega o retângulo (com o tamanho certo) da imagem
+jogador1_rect = jogador1_img.get_rect() 
+jogador2_rect = jogador2_img.get_rect()
+
+# 2. Define as posições X e Y iniciais
+pos_y_chao = 480 # (Você definiu isso, está ótimo)
+pos_x_jogador1 = 350
+pos_x_jogador2 = 400
+
+# 3. Posiciona os retângulos no lugar certo
+jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
+jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
+
+# (O 'velocidade = 1' continua igual)
 velocidade = 1
 
 # --- Estados do jogo ---
@@ -43,6 +55,9 @@ fala_index = 0
 vencedor = None
 sinal_ativo = False
 
+tempo_sinal = random.uniform(2.0, 5.0) 
+tempo_inicio_espera = 0
+
 clock = pygame.time.Clock()
 rodando = True
 
@@ -50,6 +65,7 @@ rodando = True
 falas = [
     "Olá, forasteiro!",
     "Bem-vindo ao Velho Oeste, terra dos duelos!",
+    "Aqui vão as instruções para jogar",
     "Atirador 1: aperte a tecla A para atirar.",
     "Atirador 2: aperte a tecla L para atirar.",
     "Mas cuidado para não se antecipar!",
@@ -94,22 +110,27 @@ def desenhar_balao(fala):
 
 # --- Loop Principal ---
 while rodando:
+    
+    # --- 1. PROCESSAMENTO DE EVENTOS ---
+    # (Esta seção cuida de todos os inputs)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             rodando = False
 
-        # --- Controles de fluxo ---
+        # --- Controles de fluxo (baseado em estado) ---
         if estado_jogo == "INICIO":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 estado_jogo = "EXPLICACAO"
 
         elif estado_jogo == "EXPLICACAO":
+            # Avança a fala com ESPAÇO ou clique
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE) or event.type == pygame.MOUSEBUTTONDOWN:
                 if fala_index < len(falas) - 1:
                     fala_index += 1
                 else:
-                    estado_jogo = "ANDANDO"
+                    estado_jogo = "ANDANDO" # Fim das falas, começa o jogo
 
+        # Lógica de Tiro 1: Atirar na hora certa
         elif estado_jogo == "SINAL" and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
@@ -119,6 +140,7 @@ while rodando:
                     vencedor = "Atirador 2"
                     estado_jogo = "FIM"
 
+        # Lógica de Tiro 2: Atirar antes da hora
         elif estado_jogo in ("ANDANDO", "ESPERANDO") and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
@@ -128,15 +150,34 @@ while rodando:
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
                     estado_jogo = "FIM"
 
-    # --- Lógica ---
+    # --- 2. LÓGICA DO JOGO ---
+    # (Esta seção atualiza o estado do jogo automaticamente)
+    # (Esta é a parte que foi corrigida)
+    
     if estado_jogo == "ANDANDO":
-        jogador1_rect.x += velocidade
-        jogador2_rect.x -= velocidade
-        if jogador1_rect.left > 100 and jogador2_rect.right < 700:
-            estado_jogo = "SINAL"
+        # 1. Move os jogadores
+        jogador1_rect.x -= velocidade 
+        jogador2_rect.x += velocidade 
+        
+        # 2. CHECA SE É HORA DE PARAR (DENTRO do "ANDANDO")
+        if jogador1_rect.left < 10 or jogador2_rect.right > 790:
+            estado_jogo = "ESPERANDO"
+            tempo_inicio_espera = pygame.time.get_ticks() # Inicia o timer
+
+    elif estado_jogo == "ESPERANDO":
+        # 3. Se estiver esperando, checa o timer
+        tempo_agora = pygame.time.get_ticks()
+        tempo_passados_ms = tempo_agora - tempo_inicio_espera
+        tempo_sinal_ms = tempo_sinal * 1000 
+        
+        # 4. CHECA SE O TEMPO ACABOU (DENTRO do "ESPERANDO")
+        if tempo_passados_ms > tempo_sinal_ms:
+            estado_jogo = "SINAL" 
             sinal_ativo = True
 
-    # --- Desenho ---
+    # --- 3. DESENHO ---
+    # (Esta seção desenha tudo na tela, baseado no estado)
+    
     if estado_jogo == "INICIO":
         tela.blit(fundo_inicio, (0, 0))
         instrucao = fonte_texto.render("Pressione ESPAÇO para começar o duelo!", True, BRANCO)
@@ -150,20 +191,32 @@ while rodando:
         if fala_index == len(falas) - 1:
             desenhar_botao("Começar Duelo", altura_tela - 80)
 
-    else:
+    else: # Cuida de ANDANDO, ESPERANDO, SINAL, FIM
+        
+        # 1. Desenha o fundo (Verde ou o normal)
         if sinal_ativo:
             tela.fill(VERDE)
         else:
-            tela.fill(CINZA_FUNDO)
+            tela.blit(fundo_inicio, (0, 0)) # Fundo do jogo
 
-        tela.blit(jogador1_img, jogador1_rect)
-        tela.blit(jogador2_img, jogador2_rect)
-
+        # --- TESTE DE DIAGNÓSTICO ---
+        # Comente as linhas de 'blit' dos jogadores
+        # tela.blit(jogador1_img, jogador1_rect)
+        # tela.blit(jogador2_img, jogador2_rect)
+        
+        # E adicione estas linhas:
+        COR_TESTE = (255, 0, 0) # Vermelho brilhante
+        pygame.draw.rect(tela, COR_TESTE, jogador1_rect)
+        pygame.draw.rect(tela, COR_TESTE, jogador2_rect)
+        # --- FIM DO TESTE ---
+        
         if estado_jogo == "FIM":
-            texto = fonte_vencedor.render(f"VENCEDOR: {vencedor}", True, BRANCO)
+            texto = fonte_vencedor.render(f"VENCEDEDOR: {vencedor}", True, BRANCO)
             tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2)))
 
+    # --- 4. ATUALIZAÇÃO FINAL ---
     pygame.display.flip()
     clock.tick(60)
 
+# --- Fim do Jogo ---
 pygame.quit()
