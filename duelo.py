@@ -25,10 +25,20 @@ fonte_vencedor = pygame.font.Font(None, 45)
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 
+# cowboy_img é a imagem grande do início (mantenha ela assim)
 cowboy_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
-cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela))  # Cowboy ocupa a tela inteira
+cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela)) 
 
-cowboybase = pygame.image.load("cowboy1.png").convert_alpha()
+# --- AQUI VAI A MUDANÇA ---
+# 1. Carrega a imagem base
+cowboybase_original = pygame.image.load("cowboy1.png").convert_alpha()
+
+# 2. REDIMENSIONA a imagem base para um tamanho menor e visível
+LARGURA_COWBOY = 80  # Experimente este valor!
+ALTURA_COWBOY = 150 # Experimente este valor!
+cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
+
+# Agora, define as imagens dos jogadores (elas já estão redimensionadas)
 jogador1_img = cowboybase
 jogador2_img = pygame.transform.flip(cowboybase, True, False)
 
@@ -38,7 +48,7 @@ jogador1_rect = jogador1_img.get_rect()
 jogador2_rect = jogador2_img.get_rect()
 
 # 2. Define as posições X e Y iniciais
-pos_y_chao = 480 # (Você definiu isso, está ótimo)
+pos_y_chao = 450 
 pos_x_jogador1 = 350
 pos_x_jogador2 = 400
 
@@ -199,17 +209,16 @@ while rodando:
         else:
             tela.blit(fundo_inicio, (0, 0)) # Fundo do jogo
 
-        # --- TESTE DE DIAGNÓSTICO ---
-        # Comente as linhas de 'blit' dos jogadores
-        # tela.blit(jogador1_img, jogador1_rect)
-        # tela.blit(jogador2_img, jogador2_rect)
+        # 2. Desenha os jogadores (CÓDIGO CORRIGIDO)
+        tela.blit(jogador1_img, jogador1_rect) # <-- DESCOMENTADO
+        tela.blit(jogador2_img, jogador2_rect) # <-- DESCOMENTADO
         
         # E adicione estas linhas:
         COR_TESTE = (255, 0, 0) # Vermelho brilhante
         pygame.draw.rect(tela, COR_TESTE, jogador1_rect)
         pygame.draw.rect(tela, COR_TESTE, jogador2_rect)
         # --- FIM DO TESTE ---
-        
+
         if estado_jogo == "FIM":
             texto = fonte_vencedor.render(f"VENCEDEDOR: {vencedor}", True, BRANCO)
             tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2)))
