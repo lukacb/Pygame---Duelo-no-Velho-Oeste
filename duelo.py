@@ -59,6 +59,16 @@ jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
 # (O 'velocidade = 1' continua igual)
 velocidade = 1
 
+direcao_jogador1 = -1   # começa indo para a esquerda
+direcao_jogador2 = 1    # começa indo para a direita
+
+limite_esquerda = 10
+limite_direita  = largura_tela - LARGURA_COWBOY - 10
+
+mirando_duracao_ms = 1200
+mirando_inicio_ms = 0
+
+
 # --- Estados do jogo ---
 estado_jogo = "INICIO"  # INICIO -> EXPLICACAO -> ANDANDO -> SINAL -> FIM
 fala_index = 0
@@ -151,7 +161,7 @@ while rodando:
                     estado_jogo = "FIM"
 
         # Lógica de Tiro 2: Atirar antes da hora
-        elif estado_jogo in ("ANDANDO", "ESPERANDO") and vencedor is None:
+        elif estado_jogo in ("ANDANDO", "ESPERANDO","MIRANDO") and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
@@ -165,15 +175,29 @@ while rodando:
     # (Esta é a parte que foi corrigida)
     
     if estado_jogo == "ANDANDO":
-        # 1. Move os jogadores
-        jogador1_rect.x -= velocidade 
-        jogador2_rect.x += velocidade 
-        
-        # 2. CHECA SE É HORA DE PARAR (DENTRO do "ANDANDO")
-        if jogador1_rect.left < 10 or jogador2_rect.right > 790:
-            estado_jogo = "ESPERANDO"
-            tempo_inicio_espera = pygame.time.get_ticks() # Inicia o timer
+        if jogador1_rect.x > limite_esquerda:
+            jogador1_rect.x += direcao_jogador1 * velocidade
+        else:
+            jogador1_rect.x = limite_esquerda  # trava na borda
 
+        if jogador2_rect.x < limite_direita:
+            jogador2_rect.x += direcao_jogador2 * velocidade
+        else:
+            jogador2_rect.x = limite_direita   # trava na borda
+
+    # quando ambos estiverem nas bordas, viram e passam a mirar um ao outro
+        if jogador1_rect.x == limite_esquerda and jogador2_rect.x == limite_direita:
+        # esquerda olha para a direita; direita olha para a esquerda
+            jogador1_img = cowboybase
+            jogador2_img = pygame.transform.flip(cowboybase, True, False)
+            estado_jogo = "MIRANDO"
+            mirando_inicio_ms = pygame.time.get_ticks()
+    
+    elif estado_jogo == "MIRANDO":
+        if pygame.time.get_ticks() - mirando_inicio_ms >= mirando_duracao_ms:
+            estado_jogo = "ESPERANDO"
+            tempo_inicio_espera = pygame.time.get_ticks()
+    
     elif estado_jogo == "ESPERANDO":
         # 3. Se estiver esperando, checa o timer
         tempo_agora = pygame.time.get_ticks()
