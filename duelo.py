@@ -38,6 +38,55 @@ LARGURA_COWBOY = 80  # Experimente este valor!
 ALTURA_COWBOY = 150 # Experimente este valor!
 cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
 
+# --- Animações (carregamento seguro, com fallback) ---
+def carrega_frames(padrao, qtd):
+    frames = []
+    for i in range(qtd):
+        img = pygame.image.load(padrao.format(i)).convert_alpha()
+        frames.append(pygame.transform.scale(img, (LARGURA_COWBOY, ALTURA_COWBOY)))
+    return frames
+
+# Tente carregar sprites; se não existirem, usa a base como fallback (sem animação)
+try:
+    walk_right_frames = carrega_frames("sprites/cowboy_walk_right_{:02d}.png", 6)
+except:
+    walk_right_frames = [cowboybase]
+
+walk_left_frames  = [pygame.transform.flip(f, True, False) for f in walk_right_frames]
+
+try:
+    back_frames = carrega_frames("sprites/cowboy_back_{:02d}.png", 4)
+except:
+    back_frames = [cowboybase]  # fallback simples
+
+try:
+    aim_right_frames = carrega_frames("sprites/cowboy_aim_right_{:02d}.png", 3)
+except:
+    aim_right_frames = [cowboybase]
+
+aim_left_frames = [pygame.transform.flip(f, True, False) for f in aim_right_frames]
+
+# Controle de animação
+p1_action = "back_left"   # INÍCIO: de costas, cada um voltado para fora
+p2_action = "back_right"
+p1_frame = 0
+p2_frame = 0
+anim_fps = 10
+anim_timer_ms = 0
+
+def frame_seq(acao):
+    if acao == "walk_left":
+        return walk_left_frames
+    if acao == "walk_right":
+        return walk_right_frames
+    if acao == "aim_left":
+        return aim_left_frames
+    if acao == "aim_right":
+        return aim_right_frames
+    # "back_*"
+    return back_frames
+
+
 # Agora, define as imagens dos jogadores (elas já estão redimensionadas)
 jogador1_img = cowboybase
 jogador2_img = pygame.transform.flip(cowboybase, True, False)
@@ -184,7 +233,12 @@ while rodando:
             jogador2_rect.x += direcao_jogador2 * velocidade
         else:
             jogador2_rect.x = limite_direita   # trava na borda
-
+        if jogador1_rect.x <= limite_esquerda and jogador2_rect.x >= limite_direita:
+            jogador1_rect.x = limite_esquerda
+            jogador2_rect.x = limite_direita
+            p1_action, p2_action = "aim_right", "aim_left"
+            estado_jogo = "MIRANDO"
+            mirando_inicio_ms = pygame.time.get_ticks()
     # quando ambos estiverem nas bordas, viram e passam a mirar um ao outro
         if jogador1_rect.x == limite_esquerda and jogador2_rect.x == limite_direita:
         # esquerda olha para a direita; direita olha para a esquerda
@@ -208,7 +262,25 @@ while rodando:
         if tempo_passados_ms > tempo_sinal_ms:
             estado_jogo = "SINAL" 
             sinal_ativo = True
+    
+    if estado_jogo in ("INICIO", "EXPLICACAO"):
+        p1_action, p2_action = "back_left", "back_right"
+    elif estado_jogo == "ANDANDO":
+        p1_action, p2_action = "walk_left", "walk_right"
+    elif estado_jogo in ("MIRANDO", "ESPERANDO", "SINAL"):
+        p1_action, p2_action = "aim_right", "aim_left"
 
+    # --- Avança frames de animação com base no tempo ---
+    anim_timer_ms += clock.get_time()
+    if anim_timer_ms >= int(1000 / anim_fps):
+        anim_timer_ms = 0
+        p1_frame = (p1_frame + 1) % len(frame_seq(p1_action))
+        p2_frame = (p2_frame + 1) % len(frame_seq(p2_action))
+
+    # Atualiza as imagens atuais dos jogadores para o frame correspondente
+    jogador1_img = frame_seq(p1_action)[p1_frame]
+    jogador2_img = frame_seq(p2_action)[p2_frame]
+    
     # --- 3. DESENHO ---
     # (Esta seção desenha tudo na tela, baseado no estado)
     
