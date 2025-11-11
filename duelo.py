@@ -184,18 +184,22 @@ def desenhar_balao(fala):
         y += 35
 
 def desenhar_barra_reacao(ativo):
-    barra = pygame.Rect(largura_tela//2 - 150, 20, 300, 20)
+    # Barra centralizada mais abaixo para não colidir com o placar
+    barra = pygame.Rect(largura_tela//2 - 150, 56, 300, 22)
     pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
     if ativo:
         pygame.draw.rect(tela, VERDE, barra, border_radius=10)
     pygame.draw.rect(tela, BRANCO, barra, 2, border_radius=10)
+
+    # Texto agora fica DENTRO da barra, centralizado
     rotulo = "ATIRE!" if ativo else "Espere..."
     txt = fonte_texto.render(rotulo, True, BRANCO)
-    tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
+    tela.blit(txt, txt.get_rect(center=barra.center))
 
 def desenhar_placar():
-    txt = fonte_texto.render(f"Rodada {rodada}/3 P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
-    tela.blit(txt, (20, 20))
+    # Placar fica fixo no canto superior esquerdo, acima da barra
+    txt = fonte_texto.render(f"Rodada {rodada}/3  P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    tela.blit(txt, (16, 16))
 
 # --- Loop Principal ---
 while rodando:
