@@ -17,7 +17,7 @@ CINZA_FUNDO = (100, 100, 100)
 VERDE = (0, 255, 0)
 
 # --- Fontes ---
-fonte_titulo =  pygame.font.Font("PressStart2P-Regular.ttf", 20)
+fonte_titulo = pygame.font.Font("PressStart2P-Regular.ttf", 20)
 fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
 fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
@@ -25,30 +25,25 @@ fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 
-# cowboy_img é a imagem grande do início (mantenha ela assim)
 cowboy_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
 cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela))
 
-# --- IMAGENS DOS PERSONAGENS
+# --- IMAGENS DOS PERSONAGENS ---
 LARGURA_COWBOY = 80
 ALTURA_COWBOY = 150
 
-# parado / base (usaremos a imagem de lado como pose neutra)
 cowboybase_original = pygame.image.load("Cowboydelado.png").convert_alpha()
 cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
 
-# andando → cowboy de lado
 walk_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydelado.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 walk_left_frames = [pygame.transform.flip(walk_right_frames[0], True, False)]
 
-# de costas → para a fase inicial
 back_frames = [pygame.transform.scale(pygame.image.load("cowboydecostas.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 
-# mirando de frente
 aim_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydefrente.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 aim_left_frames = [pygame.transform.flip(aim_right_frames[0], True, False)]
 
-# --- Animações (carregamento seguro, com fallback) ---
+# --- Função de carregamento ---
 def carrega_frames(padrao, qtd):
     frames = []
     for i in range(qtd):
@@ -73,7 +68,7 @@ except:
     aim_right_frames = [cowboybase]
 aim_left_frames = [pygame.transform.flip(f, True, False) for f in aim_right_frames]
 
-# Controle de animação
+# --- Controle de animação ---
 p1_action = "back_left"
 p2_action = "back_right"
 p1_frame = 0
@@ -82,29 +77,32 @@ anim_fps = 10
 anim_timer_ms = 0
 
 def frame_seq(acao):
-    if acao == "walk_left": return walk_left_frames
-    if acao == "walk_right": return walk_right_frames
-    if acao == "aim_left": return aim_left_frames
-    if acao == "aim_right": return aim_right_frames
+    if acao == "walk_left":
+        return walk_left_frames
+    if acao == "walk_right":
+        return walk_right_frames
+    if acao == "aim_left":
+        return aim_left_frames
+    if acao == "aim_right":
+        return aim_right_frames
     return back_frames
 
 # --- Retângulos dos jogadores ---
 jogador1_img = back_frames[0]
 jogador2_img = back_frames[0]
-
 jogador1_rect = jogador1_img.get_rect()
 jogador2_rect = jogador2_img.get_rect()
 
 pos_y_chao = 450
 pos_x_jogador1 = 350
 pos_x_jogador2 = 400
-
 jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
 jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
 
 velocidade = 1
 direcao_jogador1 = -1
 direcao_jogador2 = 1
+
 limite_esquerda = 10
 limite_direita = largura_tela - LARGURA_COWBOY - 10
 
@@ -118,6 +116,7 @@ vencedor = None
 sinal_ativo = False
 tempo_sinal = random.uniform(2.0, 5.0)
 tempo_inicio_espera = 0
+
 clock = pygame.time.Clock()
 rodando = True
 
@@ -131,6 +130,11 @@ falas = [
     "Mas cuidado para não se antecipar!",
     "Espere o sinal verde para vencer o duelo!"
 ]
+
+# --- Controle de morte ---
+jogador1_vivo = True
+jogador2_vivo = True
+velocidade_queda = 6
 
 # --- Funções auxiliares ---
 def desenhar_botao(texto, pos_y):
@@ -173,7 +177,7 @@ def desenhar_barra_reacao(ativo):
     tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
 
 def desenhar_placar():
-    txt = fonte_texto.render(f"Rodada {rodada}/3  P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    txt = fonte_texto.render(f"Rodada {rodada}/3 P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
@@ -201,10 +205,12 @@ while rodando:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 1"
+                    jogador2_vivo = False
                     pontos_p1 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     vencedor = "Atirador 2"
+                    jogador1_vivo = False
                     pontos_p2 += 1
                     estado_jogo = "FIM"
 
@@ -212,15 +218,19 @@ while rodando:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
+                    jogador1_vivo = False
                     pontos_p2 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
+                    jogador2_vivo = False
                     pontos_p1 += 1
                     estado_jogo = "FIM"
 
         elif estado_jogo == "FIM":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                jogador1_vivo = True
+                jogador2_vivo = True
                 if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
                     pontos_p1 = pontos_p2 = 0
                     rodada = 1
@@ -269,6 +279,7 @@ while rodando:
             estado_jogo = "SINAL"
             sinal_ativo = True
 
+    # --- Seleção das ações ---
     if estado_jogo in ("INICIO", "EXPLICACAO"):
         p1_action, p2_action = "back_left", "back_right"
     elif estado_jogo == "ANDANDO":
@@ -302,21 +313,33 @@ while rodando:
         tela.blit(fundo_inicio, (0, 0))
         desenhar_barra_reacao(sinal_ativo)
         desenhar_placar()
-        tela.blit(jogador1_img, jogador1_rect)
-        tela.blit(jogador2_img, jogador2_rect)
 
-        if estado_jogo == "FIM":
-            if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
-                campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
-                texto = fonte_vencedor.render(f"CAMPEÃO: {campeao} (melhor de 3)", True, BRANCO)
-                sub = fonte_texto.render("Pressione ESPAÇO para reiniciar", True, BRANCO)
-            else:
-                texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
-                sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
-            tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
-            tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
+        # Morte animada
+        if not jogador1_vivo:
+            jogador1_rect.y += velocidade_queda
+            jogador1_img = pygame.transform.rotate(jogador1_img, 90)
+        if not jogador2_vivo:
+            jogador2_rect.y += velocidade_queda
+            jogador2_img = pygame.transform.rotate(jogador2_img, -90)
+
+        if jogador1_vivo:
+            tela.blit(jogador1_img, jogador1_rect)
+        if jogador2_vivo:
+            tela.blit(jogador2_img, jogador2_rect)
+
+    if estado_jogo == "FIM":
+        if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
+            campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
+            texto = fonte_vencedor.render(f"CAMPEÃO: {campeao} (melhor de 3)", True, BRANCO)
+            sub = fonte_texto.render("Pressione ESPAÇO para reiniciar", True, BRANCO)
+        else:
+            texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
+            sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
+        tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
+        tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
 
     pygame.display.flip()
     clock.tick(60)
 
 pygame.quit()
+
