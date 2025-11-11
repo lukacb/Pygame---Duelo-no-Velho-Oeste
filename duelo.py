@@ -4,6 +4,13 @@ import random
 pygame.init()
 pygame.font.init()
 
+pygame.mixer.init()  # inicializa o mixer de áudio
+
+pygame.mixer.music.load("faroeste.mp3")  # nome do teu arquivo de música
+pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop
+pygame.mixer.music.set_volume(0.5)  # volume de 0.0 a 1.0
+
+
 # --- Configurações da Tela ---
 largura_tela = 800
 altura_tela = 600
