@@ -136,6 +136,16 @@ jogador1_vivo = True
 jogador2_vivo = True
 velocidade_queda = 6
 
+# --- Balas ---
+balas = []
+velocidade_bala = 300
+
+def disparar(origem_rect, direcao):
+    """Cria uma bala a partir do jogador."""
+    x = origem_rect.centerx + (40 * direcao)
+    y = origem_rect.centery - 40
+    balas.append([x, y, direcao])
+
 # --- Funções auxiliares ---
 def desenhar_botao(texto, pos_y):
     botao_rect = pygame.Rect(largura_tela/2 - 100, pos_y, 200, 50)
@@ -204,11 +214,13 @@ while rodando:
         elif estado_jogo == "SINAL" and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
+                    disparar(jogador1_rect, 1)
                     vencedor = "Atirador 1"
                     jogador2_vivo = False
                     pontos_p1 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
+                    disparar(jogador2_rect, -1)
                     vencedor = "Atirador 2"
                     jogador1_vivo = False
                     pontos_p2 += 1
@@ -279,6 +291,11 @@ while rodando:
             estado_jogo = "SINAL"
             sinal_ativo = True
 
+    # --- Atualização das balas ---
+    for bala in balas:
+        bala[0] += bala[2] * velocidade_bala
+    balas = [b for b in balas if 0 < b[0] < largura_tela]
+
     # --- Seleção das ações ---
     if estado_jogo in ("INICIO", "EXPLICACAO"):
         p1_action, p2_action = "back_left", "back_right"
@@ -327,6 +344,12 @@ while rodando:
         if jogador2_vivo:
             tela.blit(jogador2_img, jogador2_rect)
 
+        # Desenhar balas
+        for bala in balas:
+            AMARELO = (255, 255, 0)
+
+            pygame.draw.circle(tela, AMARELO, (int(bala[0]), int(bala[1])), 5)
+
     if estado_jogo == "FIM":
         if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
             campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
@@ -342,4 +365,3 @@ while rodando:
     clock.tick(60)
 
 pygame.quit()
-
