@@ -17,9 +17,9 @@ CINZA_FUNDO = (100, 100, 100)
 VERDE = (0, 255, 0)
 
 # --- Fontes ---
-fonte_titulo = pygame.font.Font(None, 48)
-fonte_texto = pygame.font.Font(None, 28)
-fonte_vencedor = pygame.font.Font(None, 45)
+fonte_titulo =  pygame.font.Font("PressStart2P-Regular.ttf", 20)
+fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
+fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
 # --- Imagens ---
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
@@ -27,10 +27,9 @@ fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 
 # cowboy_img é a imagem grande do início (mantenha ela assim)
 cowboy_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
-cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela)) 
+cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela))
 
 # --- IMAGENS DOS PERSONAGENS
-
 LARGURA_COWBOY = 80
 ALTURA_COWBOY = 150
 
@@ -40,7 +39,7 @@ cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA
 
 # andando → cowboy de lado
 walk_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydelado.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
-walk_left_frames  = [pygame.transform.flip(walk_right_frames[0], True, False)]
+walk_left_frames = [pygame.transform.flip(walk_right_frames[0], True, False)]
 
 # de costas → para a fase inicial
 back_frames = [pygame.transform.scale(pygame.image.load("cowboydecostas.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
@@ -57,28 +56,25 @@ def carrega_frames(padrao, qtd):
         frames.append(pygame.transform.scale(img, (LARGURA_COWBOY, ALTURA_COWBOY)))
     return frames
 
-# Tente carregar sprites; se não existirem, usa a base como fallback (sem animação)
 try:
     walk_right_frames = carrega_frames("Cowboydelado{:02d}.png", 6)
 except:
     walk_right_frames = [cowboybase]
-
-walk_left_frames  = [pygame.transform.flip(f, True, False) for f in walk_right_frames]
+walk_left_frames = [pygame.transform.flip(f, True, False) for f in walk_right_frames]
 
 try:
     back_frames = carrega_frames("cowboydecostas{:02d}.png", 4)
 except:
-    back_frames = [cowboybase]  # fallback simples
+    back_frames = [cowboybase]
 
 try:
     aim_right_frames = carrega_frames("Cowboydelado{:02d}.png", 3)
 except:
     aim_right_frames = [cowboybase]
-
 aim_left_frames = [pygame.transform.flip(f, True, False) for f in aim_right_frames]
 
 # Controle de animação
-p1_action = "back_left"   # INÍCIO: de costas, cada um voltado para fora
+p1_action = "back_left"
 p2_action = "back_right"
 p1_frame = 0
 p2_frame = 0
@@ -86,57 +82,42 @@ anim_fps = 10
 anim_timer_ms = 0
 
 def frame_seq(acao):
-    if acao == "walk_left":
-        return walk_left_frames
-    if acao == "walk_right":
-        return walk_right_frames
-    if acao == "aim_left":
-        return aim_left_frames
-    if acao == "aim_right":
-        return aim_right_frames
-    # "back_*"
+    if acao == "walk_left": return walk_left_frames
+    if acao == "walk_right": return walk_right_frames
+    if acao == "aim_left": return aim_left_frames
+    if acao == "aim_right": return aim_right_frames
     return back_frames
 
-
-# Agora, define as imagens dos jogadores (elas já estão redimensionadas)
+# --- Retângulos dos jogadores ---
 jogador1_img = back_frames[0]
 jogador2_img = back_frames[0]
-# --- Retângulos dos jogadores ---
-# 1. Pega o retângulo (com o tamanho certo) da imagem
-jogador1_rect = jogador1_img.get_rect() 
+
+jogador1_rect = jogador1_img.get_rect()
 jogador2_rect = jogador2_img.get_rect()
 
-# 2. Define as posições X e Y iniciais
-pos_y_chao = 450 
+pos_y_chao = 450
 pos_x_jogador1 = 350
 pos_x_jogador2 = 400
 
-# 3. Posiciona os retângulos no lugar certo
 jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
 jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
 
-# (O 'velocidade = 1' continua igual)
 velocidade = 1
-
-direcao_jogador1 = -1   # começa indo para a esquerda
-direcao_jogador2 = 1    # começa indo para a direita
-
+direcao_jogador1 = -1
+direcao_jogador2 = 1
 limite_esquerda = 10
-limite_direita  = largura_tela - LARGURA_COWBOY - 10
+limite_direita = largura_tela - LARGURA_COWBOY - 10
 
 mirando_duracao_ms = 1200
 mirando_inicio_ms = 0
 
-
 # --- Estados do jogo ---
-estado_jogo = "INICIO"  # INICIO -> EXPLICACAO -> ANDANDO -> SINAL -> FIM
+estado_jogo = "INICIO"
 fala_index = 0
 vencedor = None
 sinal_ativo = False
-
-tempo_sinal = random.uniform(2.0, 5.0) 
+tempo_sinal = random.uniform(2.0, 5.0)
 tempo_inicio_espera = 0
-
 clock = pygame.time.Clock()
 rodando = True
 
@@ -151,7 +132,7 @@ falas = [
     "Espere o sinal verde para vencer o duelo!"
 ]
 
-# --- Função para desenhar botão ---
+# --- Funções auxiliares ---
 def desenhar_botao(texto, pos_y):
     botao_rect = pygame.Rect(largura_tela/2 - 100, pos_y, 200, 50)
     pygame.draw.rect(tela, PRETO, botao_rect)
@@ -160,14 +141,10 @@ def desenhar_botao(texto, pos_y):
     tela.blit(txt, txt.get_rect(center=botao_rect.center))
     return botao_rect
 
-# --- Função para desenhar balão retangular ---
 def desenhar_balao(fala):
-    # Retângulo fixo no canto superior direito
     balao_rect = pygame.Rect(largura_tela - 350, 40, 320, 160)
     pygame.draw.rect(tela, BRANCO, balao_rect, border_radius=15)
     pygame.draw.rect(tela, PRETO, balao_rect, 3, border_radius=15)
-
-    # Quebra automática de linha para o texto
     palavras = fala.split(" ")
     linhas = []
     linha_atual = ""
@@ -179,14 +156,12 @@ def desenhar_balao(fala):
             linhas.append(linha_atual)
             linha_atual = palavra + " "
     linhas.append(linha_atual)
-
-    # Desenha o texto dentro do retângulo
     y = balao_rect.y + 20
     for linha in linhas:
         texto = fonte_texto.render(linha.strip(), True, PRETO)
         tela.blit(texto, (balao_rect.x + 15, y))
         y += 35
-    
+
 def desenhar_barra_reacao(ativo):
     barra = pygame.Rect(largura_tela//2 - 150, 20, 300, 20)
     pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
@@ -198,19 +173,15 @@ def desenhar_barra_reacao(ativo):
     tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
 
 def desenhar_placar():
-    txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    txt = fonte_texto.render(f"Rodada {rodada}/3  P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
 while rodando:
-    
-    # --- 1. PROCESSAMENTO DE EVENTOS ---
-    # (Esta seção cuida de todos os inputs)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             rodando = False
 
-        # --- Controles de fluxo (baseado em estado) ---
         if estado_jogo == "INICIO":
             pontos_p1 = 0
             pontos_p2 = 0
@@ -220,14 +191,12 @@ while rodando:
                 estado_jogo = "EXPLICACAO"
 
         elif estado_jogo == "EXPLICACAO":
-            # Avança a fala com ESPAÇO ou clique
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE) or event.type == pygame.MOUSEBUTTONDOWN:
                 if fala_index < len(falas) - 1:
                     fala_index += 1
                 else:
-                    estado_jogo = "ANDANDO" # Fim das falas, começa o jogo
+                    estado_jogo = "ANDANDO"
 
-        # Lógica de Tiro 1: Atirar na hora certa
         elif estado_jogo == "SINAL" and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
@@ -239,7 +208,6 @@ while rodando:
                     pontos_p2 += 1
                     estado_jogo = "FIM"
 
-        # Lógica de Tiro 2: Atirar antes da hora
         elif estado_jogo in ("ANDANDO", "ESPERANDO", "MIRANDO") and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
@@ -254,7 +222,6 @@ while rodando:
         elif estado_jogo == "FIM":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
-            # reinicia melhor de 3
                     pontos_p1 = pontos_p2 = 0
                     rodada = 1
                     vencedor = None
@@ -264,7 +231,6 @@ while rodando:
                     tempo_sinal = random.uniform(2.0, 5.0)
                     estado_jogo = "INICIO"
                 else:
-            # próxima rodada
                     rodada += 1
                     vencedor = None
                     sinal_ativo = False
@@ -272,50 +238,37 @@ while rodando:
                     jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
                     tempo_sinal = random.uniform(2.0, 5.0)
                     estado_jogo = "ANDANDO"
-    # --- 2. LÓGICA DO JOGO ---
-    # (Esta seção atualiza o estado do jogo automaticamente)
-    # (Esta é a parte que foi corrigida)
-    
+
+    # --- Lógica do jogo ---
     if estado_jogo == "ANDANDO":
         if jogador1_rect.x > limite_esquerda:
             jogador1_rect.x += direcao_jogador1 * velocidade
         else:
-            jogador1_rect.x = limite_esquerda  # trava na borda
-
+            jogador1_rect.x = limite_esquerda
         if jogador2_rect.x < limite_direita:
             jogador2_rect.x += direcao_jogador2 * velocidade
         else:
-            jogador2_rect.x = limite_direita   # trava na borda
+            jogador2_rect.x = limite_direita
         if jogador1_rect.x <= limite_esquerda and jogador2_rect.x >= limite_direita:
             jogador1_rect.x = limite_esquerda
             jogador2_rect.x = limite_direita
             p1_action, p2_action = "aim_right", "aim_left"
             estado_jogo = "MIRANDO"
             mirando_inicio_ms = pygame.time.get_ticks()
-    # quando ambos estiverem nas bordas, viram e passam a mirar um ao outro
-        if jogador1_rect.x == limite_esquerda and jogador2_rect.x == limite_direita:
-        # esquerda olha para a direita; direita olha para a esquerda
-            jogador1_img = cowboybase
-            jogador2_img = pygame.transform.flip(cowboybase, True, False)
-            estado_jogo = "MIRANDO"
-            mirando_inicio_ms = pygame.time.get_ticks()
-    
+
     elif estado_jogo == "MIRANDO":
         if pygame.time.get_ticks() - mirando_inicio_ms >= mirando_duracao_ms:
             estado_jogo = "ESPERANDO"
             tempo_inicio_espera = pygame.time.get_ticks()
-    
+
     elif estado_jogo == "ESPERANDO":
-        # 3. Se estiver esperando, checa o timer
         tempo_agora = pygame.time.get_ticks()
         tempo_passados_ms = tempo_agora - tempo_inicio_espera
-        tempo_sinal_ms = tempo_sinal * 1000 
-        
-        # 4. CHECA SE O TEMPO ACABOU (DENTRO do "ESPERANDO")
+        tempo_sinal_ms = tempo_sinal * 1000
         if tempo_passados_ms > tempo_sinal_ms:
-            estado_jogo = "SINAL" 
+            estado_jogo = "SINAL"
             sinal_ativo = True
-    
+
     if estado_jogo in ("INICIO", "EXPLICACAO"):
         p1_action, p2_action = "back_left", "back_right"
     elif estado_jogo == "ANDANDO":
@@ -323,20 +276,17 @@ while rodando:
     elif estado_jogo in ("MIRANDO", "ESPERANDO", "SINAL"):
         p1_action, p2_action = "aim_right", "aim_left"
 
-    # --- Avança frames de animação com base no tempo ---
+    # --- Animação ---
     anim_timer_ms += clock.get_time()
     if anim_timer_ms >= int(1000 / anim_fps):
         anim_timer_ms = 0
         p1_frame = (p1_frame + 1) % len(frame_seq(p1_action))
         p2_frame = (p2_frame + 1) % len(frame_seq(p2_action))
 
-    # Atualiza as imagens atuais dos jogadores para o frame correspondente
     jogador1_img = frame_seq(p1_action)[p1_frame]
     jogador2_img = frame_seq(p2_action)[p2_frame]
-    
-    # --- 3. DESENHO ---
-    # (Esta seção desenha tudo na tela, baseado no estado)
-    
+
+    # --- Desenho ---
     if estado_jogo == "INICIO":
         tela.blit(fundo_inicio, (0, 0))
         instrucao = fonte_texto.render("Pressione ESPAÇO para começar o duelo!", True, BRANCO)
@@ -345,24 +295,15 @@ while rodando:
     elif estado_jogo == "EXPLICACAO":
         tela.blit(cowboy_img, (0, 0))
         desenhar_balao(falas[fala_index])
-
-        # Botão aparece só na última fala
         if fala_index == len(falas) - 1:
             desenhar_botao("Começar Duelo", altura_tela - 80)
 
-    else: # Cuida de ANDANDO, ESPERANDO, SINAL, FIM
-        
-        # 1. Desenha o fundo (Verde ou o normal)
+    else:
         tela.blit(fundo_inicio, (0, 0))
         desenhar_barra_reacao(sinal_ativo)
         desenhar_placar()
-
-        # 2. Desenha os jogadores (CÓDIGO CORRIGIDO)
-        tela.blit(jogador1_img, jogador1_rect) # <-- DESCOMENTADO
-        tela.blit(jogador2_img, jogador2_rect) # <-- DESCOMENTADO
-        
-
-        # --- FIM DO TESTE ---
+        tela.blit(jogador1_img, jogador1_rect)
+        tela.blit(jogador2_img, jogador2_rect)
 
         if estado_jogo == "FIM":
             if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
@@ -372,13 +313,10 @@ while rodando:
             else:
                 texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
                 sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
-
             tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
             tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
 
-    # --- 4. ATUALIZAÇÃO FINAL ---
     pygame.display.flip()
     clock.tick(60)
 
-# --- Fim do Jogo ---
 pygame.quit()
