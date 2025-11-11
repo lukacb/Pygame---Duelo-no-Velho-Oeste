@@ -29,14 +29,25 @@ fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 cowboy_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
 cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela)) 
 
-# --- AQUI VAI A MUDANÇA ---
-# 1. Carrega a imagem base
-cowboybase_original = pygame.image.load("cowboy1.png").convert_alpha()
+# --- IMAGENS DOS PERSONAGENS
 
-# 2. REDIMENSIONA a imagem base para um tamanho menor e visível
-LARGURA_COWBOY = 80  # Experimente este valor!
-ALTURA_COWBOY = 150 # Experimente este valor!
+LARGURA_COWBOY = 80
+ALTURA_COWBOY = 150
+
+# parado / base (usaremos a imagem de lado como pose neutra)
+cowboybase_original = pygame.image.load("Cowboydelado.png").convert_alpha()
 cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
+
+# andando → cowboy de lado
+walk_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydelado.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
+walk_left_frames  = [pygame.transform.flip(walk_right_frames[0], True, False)]
+
+# de costas → para a fase inicial
+back_frames = [pygame.transform.scale(pygame.image.load("cowboydecostas.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
+
+# mirando de frente
+aim_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydefrente.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
+aim_left_frames = [pygame.transform.flip(aim_right_frames[0], True, False)]
 
 # --- Animações (carregamento seguro, com fallback) ---
 def carrega_frames(padrao, qtd):
@@ -48,19 +59,19 @@ def carrega_frames(padrao, qtd):
 
 # Tente carregar sprites; se não existirem, usa a base como fallback (sem animação)
 try:
-    walk_right_frames = carrega_frames("sprites/cowboy_walk_right_{:02d}.png", 6)
+    walk_right_frames = carrega_frames("Cowboydelado{:02d}.png", 6)
 except:
     walk_right_frames = [cowboybase]
 
 walk_left_frames  = [pygame.transform.flip(f, True, False) for f in walk_right_frames]
 
 try:
-    back_frames = carrega_frames("sprites/cowboy_back_{:02d}.png", 4)
+    back_frames = carrega_frames("cowboydecostas{:02d}.png", 4)
 except:
     back_frames = [cowboybase]  # fallback simples
 
 try:
-    aim_right_frames = carrega_frames("sprites/cowboy_aim_right_{:02d}.png", 3)
+    aim_right_frames = carrega_frames("Cowboydelado{:02d}.png", 3)
 except:
     aim_right_frames = [cowboybase]
 
@@ -88,9 +99,8 @@ def frame_seq(acao):
 
 
 # Agora, define as imagens dos jogadores (elas já estão redimensionadas)
-jogador1_img = cowboybase
-jogador2_img = pygame.transform.flip(cowboybase, True, False)
-
+jogador1_img = back_frames[0]
+jogador2_img = back_frames[0]
 # --- Retângulos dos jogadores ---
 # 1. Pega o retângulo (com o tamanho certo) da imagem
 jogador1_rect = jogador1_img.get_rect() 
@@ -309,10 +319,7 @@ while rodando:
         tela.blit(jogador1_img, jogador1_rect) # <-- DESCOMENTADO
         tela.blit(jogador2_img, jogador2_rect) # <-- DESCOMENTADO
         
-        # E adicione estas linhas:
-        COR_TESTE = (255, 0, 0) # Vermelho brilhante
-        pygame.draw.rect(tela, COR_TESTE, jogador1_rect)
-        pygame.draw.rect(tela, COR_TESTE, jogador2_rect)
+        
         # --- FIM DO TESTE ---
 
         if estado_jogo == "FIM":
