@@ -4,15 +4,6 @@ import random
 pygame.init()
 pygame.font.init()
 
-pygame.mixer.init()  # inicializa o mixer de áudio
-
-pygame.mixer.music.load("faroeste.mp3")  # nome do teu arquivo de música
-pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop
-pygame.mixer.music.set_volume(0.5)  # volume de 0.0 a 1.0
-
-som_tiro = pygame.mixer.Sound("gunshot.mp3")  # som de tiro
-som_tiro.set_volume(1.0)
-
 # --- Configurações da Tela ---
 largura_tela = 800
 altura_tela = 600
@@ -26,33 +17,53 @@ CINZA_FUNDO = (100, 100, 100)
 VERDE = (0, 255, 0)
 
 # --- Fontes ---
-fonte_titulo = pygame.font.Font("PressStart2P-Regular.ttf", 20)
+fonte_titulo =  pygame.font.Font("PressStart2P-Regular.ttf", 20)
 fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
-fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 14)
+fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
 # --- Imagens ---
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 
-cowboy_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
-cowboy_img = pygame.transform.scale(cowboy_img, (largura_tela, altura_tela))
+# IMAGEM GRANDE (Tela de Explicação)
+# Vamos renomear para ficar mais claro:
+cowboy_explicacao_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
+cowboy_explicacao_img = pygame.transform.scale(cowboy_explicacao_img, (largura_tela, altura_tela))
 
-# --- IMAGENS DOS PERSONAGENS ---
+# --- IMAGEM NOVA (Tela de Vitória) ---
+# Carregamos a imagem original novamente
+cowboy_vitoria_original = pygame.image.load("cowboysorrindo.png").convert_alpha()
+
+# AGORA SIM: É AQUI QUE VOCÊ MUDA O TAMANHO DA TELA FINAL
+# Exemplo: 70% da largura e altura da tela
+escala_vitoria = 0.7 
+largura_vitoria = int(largura_tela * escala_vitoria)
+altura_vitoria = int(altura_tela * escala_vitoria)
+
+# Criamos a variável de imagem MENOR para a vitória
+cowboy_vitoria_img = pygame.transform.scale(cowboy_vitoria_original, (largura_vitoria, altura_vitoria))
+
+
+# --- IMAGENS DOS PERSONAGENS
 LARGURA_COWBOY = 80
 ALTURA_COWBOY = 150
 
+# parado / base (usaremos a imagem de lado como pose neutra)
 cowboybase_original = pygame.image.load("Cowboydelado.png").convert_alpha()
 cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
 
+# andando → cowboy de lado
 walk_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydelado.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 walk_left_frames = [pygame.transform.flip(walk_right_frames[0], True, False)]
 
+# de costas → para a fase inicial
 back_frames = [pygame.transform.scale(pygame.image.load("cowboydecostas.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 
+# mirando de frente
 aim_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydefrente.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 aim_left_frames = [pygame.transform.flip(aim_right_frames[0], True, False)]
 
-# --- Função de carregamento ---
+# --- Animações (carregamento seguro, com fallback) ---
 def carrega_frames(padrao, qtd):
     frames = []
     for i in range(qtd):
@@ -77,7 +88,7 @@ except:
     aim_right_frames = [cowboybase]
 aim_left_frames = [pygame.transform.flip(f, True, False) for f in aim_right_frames]
 
-# --- Controle de animação ---
+# Controle de animação
 p1_action = "back_left"
 p2_action = "back_right"
 p1_frame = 0
@@ -86,32 +97,29 @@ anim_fps = 10
 anim_timer_ms = 0
 
 def frame_seq(acao):
-    if acao == "walk_left":
-        return walk_left_frames
-    if acao == "walk_right":
-        return walk_right_frames
-    if acao == "aim_left":
-        return aim_left_frames
-    if acao == "aim_right":
-        return aim_right_frames
+    if acao == "walk_left": return walk_left_frames
+    if acao == "walk_right": return walk_right_frames
+    if acao == "aim_left": return aim_left_frames
+    if acao == "aim_right": return aim_right_frames
     return back_frames
 
 # --- Retângulos dos jogadores ---
 jogador1_img = back_frames[0]
 jogador2_img = back_frames[0]
+
 jogador1_rect = jogador1_img.get_rect()
 jogador2_rect = jogador2_img.get_rect()
 
 pos_y_chao = 450
 pos_x_jogador1 = 350
 pos_x_jogador2 = 400
+
 jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
 jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
 
 velocidade = 1
 direcao_jogador1 = -1
 direcao_jogador2 = 1
-
 limite_esquerda = 10
 limite_direita = largura_tela - LARGURA_COWBOY - 10
 
@@ -125,7 +133,6 @@ vencedor = None
 sinal_ativo = False
 tempo_sinal = random.uniform(2.0, 5.0)
 tempo_inicio_espera = 0
-
 clock = pygame.time.Clock()
 rodando = True
 
@@ -133,28 +140,12 @@ rodando = True
 falas = [
     "Olá, forasteiro!",
     "Bem-vindo ao Velho Oeste, terra dos duelos!",
-    "Aqui vão as instruções para jogar",
+    "Aqui vão as instruções para jogar!",
     "Atirador 1: aperte a tecla A para atirar.",
     "Atirador 2: aperte a tecla L para atirar.",
     "Mas cuidado para não se antecipar!",
     "Espere o sinal verde para vencer o duelo!"
 ]
-
-# --- Controle de morte ---
-jogador1_vivo = True
-jogador2_vivo = True
-velocidade_queda = 6
-
-# --- Balas ---
-balas = []
-velocidade_bala = 300
-
-def disparar(origem_rect, direcao):
-    """Cria uma bala a partir do jogador."""
-    som_tiro.play() #Acressa o som de tiro
-    x = origem_rect.centerx + (40 * direcao)
-    y = origem_rect.centery - 40
-    balas.append([x, y, direcao])
 
 # --- Funções auxiliares ---
 def desenhar_botao(texto, pos_y):
@@ -187,22 +178,18 @@ def desenhar_balao(fala):
         y += 35
 
 def desenhar_barra_reacao(ativo):
-    # Barra centralizada mais abaixo para não colidir com o placar
-    barra = pygame.Rect(largura_tela//2 - 150, 56, 300, 22)
+    barra = pygame.Rect(largura_tela//2 - 150, 20, 300, 20)
     pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
     if ativo:
         pygame.draw.rect(tela, VERDE, barra, border_radius=10)
     pygame.draw.rect(tela, BRANCO, barra, 2, border_radius=10)
-
-    # Texto agora fica DENTRO da barra, centralizado
     rotulo = "ATIRE!" if ativo else "Espere..."
     txt = fonte_texto.render(rotulo, True, BRANCO)
-    tela.blit(txt, txt.get_rect(center=barra.center))
+    tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
 
 def desenhar_placar():
-    # Placar fica fixo no canto superior esquerdo, acima da barra
     txt = fonte_texto.render(f"Rodada {rodada}/3  P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
-    tela.blit(txt, (16, 16))
+    tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
 while rodando:
@@ -228,15 +215,11 @@ while rodando:
         elif estado_jogo == "SINAL" and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
-                    disparar(jogador1_rect, 1)
                     vencedor = "Atirador 1"
-                    jogador2_vivo = False
                     pontos_p1 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
-                    disparar(jogador2_rect, -1)
                     vencedor = "Atirador 2"
-                    jogador1_vivo = False
                     pontos_p2 += 1
                     estado_jogo = "FIM"
 
@@ -244,19 +227,15 @@ while rodando:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
-                    jogador1_vivo = False
                     pontos_p2 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
-                    jogador2_vivo = False
                     pontos_p1 += 1
                     estado_jogo = "FIM"
 
         elif estado_jogo == "FIM":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                jogador1_vivo = True
-                jogador2_vivo = True
                 if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
                     pontos_p1 = pontos_p2 = 0
                     rodada = 1
@@ -305,12 +284,6 @@ while rodando:
             estado_jogo = "SINAL"
             sinal_ativo = True
 
-    # --- Atualização das balas ---
-    for bala in balas:
-        bala[0] += bala[2] * velocidade_bala
-    balas = [b for b in balas if 0 < b[0] < largura_tela]
-
-    # --- Seleção das ações ---
     if estado_jogo in ("INICIO", "EXPLICACAO"):
         p1_action, p2_action = "back_left", "back_right"
     elif estado_jogo == "ANDANDO":
@@ -335,47 +308,65 @@ while rodando:
         tela.blit(instrucao, instrucao.get_rect(center=(largura_tela/2, altura_tela/2 + 50)))
 
     elif estado_jogo == "EXPLICACAO":
-        tela.blit(cowboy_img, (0, 0))
+        # Usamos a imagem de tela cheia
+        tela.blit(cowboy_explicacao_img, (0, 0)) # <--- MUDANÇA AQUI
         desenhar_balao(falas[fala_index])
         if fala_index == len(falas) - 1:
             desenhar_botao("Começar Duelo", altura_tela - 80)
 
+    # --- TELA DE CAMPEÃO (FIM DO JOGO) ---
+    elif estado_jogo == "FIM" and (pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS):
+        
+        # 1. Desenha o fundo
+        tela.fill(PRETO) 
+        
+        # 2. Calcula a posição da imagem MENOR
+        # Centraliza horizontalmente
+        pos_x = largura_tela // 2 - cowboy_vitoria_img.get_width() // 2 
+        # Centraliza verticalmente e sobe 50 pixels
+        pos_y = altura_tela // 2 - cowboy_vitoria_img.get_height() // 2 - 50 
+        
+        # 3. Desenha a imagem de vitória (a menor)
+        tela.blit(cowboy_vitoria_img, (pos_x, pos_y)) # <--- MUDANÇA AQUI
+        
+        # Define o campeão
+        campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
+        
+        # --- Mensagens de vitória ---
+        # (Ajustei o Y das mensagens para ficarem abaixo da nova imagem)
+        
+        # Posição Y do topo da imagem + altura da imagem + 40 pixels de espaço
+        pos_y_texto1 = pos_y + cowboy_vitoria_img.get_height() + 40 
+        
+        texto_parabens = fonte_vencedor.render(f"Parabéns, {campeao}!", True, BRANCO)
+        tela.blit(texto_parabens, texto_parabens.get_rect(center=(largura_tela / 2, pos_y_texto1)))
+
+        texto_raiz = fonte_texto.render("Você é um cowboy raiz agora!", True, BRANCO)
+        tela.blit(texto_raiz, texto_raiz.get_rect(center=(largura_tela / 2, pos_y_texto1 + 40)))
+
+        texto_reiniciar = fonte_texto.render("Pressione ESPAÇO para jogar de novo.", True, BRANCO)
+        tela.blit(texto_reiniciar, texto_reiniciar.get_rect(center=(largura_tela / 2, pos_y_texto1 + 80)))
+
+    # --- TELA DE JOGO (ANDANDO, MIRANDO, ESPERANDO, SINAL e FIM DE RODADA) ---
     else:
+        
         tela.blit(fundo_inicio, (0, 0))
         desenhar_barra_reacao(sinal_ativo)
         desenhar_placar()
+        tela.blit(jogador1_img, jogador1_rect)
+        tela.blit(jogador2_img, jogador2_rect)
 
-        # Morte animada
-        if not jogador1_vivo:
-            jogador1_rect.y += velocidade_queda
-            jogador1_img = pygame.transform.rotate(jogador1_img, 90)
-        if not jogador2_vivo:
-            jogador2_rect.y += velocidade_queda
-            jogador2_img = pygame.transform.rotate(jogador2_img, -90)
-
-        if jogador1_vivo:
-            tela.blit(jogador1_img, jogador1_rect)
-        if jogador2_vivo:
-            tela.blit(jogador2_img, jogador2_rect)
-
-        # Desenhar balas
-        for bala in balas:
-            AMARELO = (255, 255, 0)
-
-            pygame.draw.circle(tela, AMARELO, (int(bala[0]), int(bala[1])), 5)
-
-    if estado_jogo == "FIM":
-        if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
-            campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
-            texto = fonte_vencedor.render(f"CAMPEÃO: {campeao} (melhor de 3)", True, BRANCO)
-            sub = fonte_texto.render("Pressione ESPAÇO para reiniciar", True, BRANCO)
-        else:
+        # Se for FIM DE RODADA (mas não o fim do jogo)
+        if estado_jogo == "FIM":
             texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
             sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
-        tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
-        tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
+            
+            # Desenha o texto de fim de rodada sobre os jogadores
+            tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
+            tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
 
     pygame.display.flip()
     clock.tick(60)
 
 pygame.quit()
+            
