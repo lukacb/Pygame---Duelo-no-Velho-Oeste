@@ -10,6 +10,8 @@ pygame.mixer.music.load("faroeste.mp3")  # nome do teu arquivo de música
 pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop
 pygame.mixer.music.set_volume(0.5)  # volume de 0.0 a 1.0
 
+som_tiro = pygame.mixer.Sound("gunshot.mp3")  # som de tiro
+som_tiro.set_volume(1.0)
 
 # --- Configurações da Tela ---
 largura_tela = 800
@@ -149,6 +151,7 @@ velocidade_bala = 300
 
 def disparar(origem_rect, direcao):
     """Cria uma bala a partir do jogador."""
+    som_tiro.play() #Acressa o som de tiro
     x = origem_rect.centerx + (40 * direcao)
     y = origem_rect.centery - 40
     balas.append([x, y, direcao])
