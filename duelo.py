@@ -186,6 +186,20 @@ def desenhar_balao(fala):
         texto = fonte_texto.render(linha.strip(), True, PRETO)
         tela.blit(texto, (balao_rect.x + 15, y))
         y += 35
+    
+def desenhar_barra_reacao(ativo):
+    barra = pygame.Rect(largura_tela//2 - 150, 20, 300, 20)
+    pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
+    if ativo:
+        pygame.draw.rect(tela, VERDE, barra, border_radius=10)
+    pygame.draw.rect(tela, BRANCO, barra, 2, border_radius=10)
+    rotulo = "ATIRE!" if ativo else "Espere..."
+    txt = fonte_texto.render(rotulo, True, BRANCO)
+    tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
+
+def desenhar_placar():
+    txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
 while rodando:
@@ -198,6 +212,10 @@ while rodando:
 
         # --- Controles de fluxo (baseado em estado) ---
         if estado_jogo == "INICIO":
+            pontos_p1 = 0
+            pontos_p2 = 0
+            rodada = 1
+            MAX_PONTOS = 2
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 estado_jogo = "EXPLICACAO"
 
@@ -214,21 +232,46 @@ while rodando:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 1"
+                    pontos_p1 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     vencedor = "Atirador 2"
+                    pontos_p2 += 1
                     estado_jogo = "FIM"
 
         # Lógica de Tiro 2: Atirar antes da hora
-        elif estado_jogo in ("ANDANDO", "ESPERANDO","MIRANDO") and vencedor is None:
+        elif estado_jogo in ("ANDANDO", "ESPERANDO", "MIRANDO") and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
+                    pontos_p2 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
+                    pontos_p1 += 1
                     estado_jogo = "FIM"
 
+        elif estado_jogo == "FIM":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
+            # reinicia melhor de 3
+                    pontos_p1 = pontos_p2 = 0
+                    rodada = 1
+                    vencedor = None
+                    sinal_ativo = False
+                    jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
+                    jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
+                    tempo_sinal = random.uniform(2.0, 5.0)
+                    estado_jogo = "INICIO"
+                else:
+            # próxima rodada
+                    rodada += 1
+                    vencedor = None
+                    sinal_ativo = False
+                    jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
+                    jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
+                    tempo_sinal = random.uniform(2.0, 5.0)
+                    estado_jogo = "ANDANDO"
     # --- 2. LÓGICA DO JOGO ---
     # (Esta seção atualiza o estado do jogo automaticamente)
     # (Esta é a parte que foi corrigida)
@@ -310,21 +353,28 @@ while rodando:
     else: # Cuida de ANDANDO, ESPERANDO, SINAL, FIM
         
         # 1. Desenha o fundo (Verde ou o normal)
-        if sinal_ativo:
-            tela.fill(VERDE)
-        else:
-            tela.blit(fundo_inicio, (0, 0)) # Fundo do jogo
+        tela.blit(fundo_inicio, (0, 0))
+        desenhar_barra_reacao(sinal_ativo)
+        desenhar_placar()
 
         # 2. Desenha os jogadores (CÓDIGO CORRIGIDO)
         tela.blit(jogador1_img, jogador1_rect) # <-- DESCOMENTADO
         tela.blit(jogador2_img, jogador2_rect) # <-- DESCOMENTADO
         
-        
+
         # --- FIM DO TESTE ---
 
         if estado_jogo == "FIM":
-            texto = fonte_vencedor.render(f"VENCEDEDOR: {vencedor}", True, BRANCO)
-            tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2)))
+            if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
+                campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
+                texto = fonte_vencedor.render(f"CAMPEÃO: {campeao} (melhor de 3)", True, BRANCO)
+                sub = fonte_texto.render("Pressione ESPAÇO para reiniciar", True, BRANCO)
+            else:
+                texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
+                sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
+
+            tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
+            tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
 
     # --- 4. ATUALIZAÇÃO FINAL ---
     pygame.display.flip()
