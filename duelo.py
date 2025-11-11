@@ -26,7 +26,7 @@ VERDE = (0, 255, 0)
 # --- Fontes ---
 fonte_titulo = pygame.font.Font("PressStart2P-Regular.ttf", 20)
 fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
-fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 15)
+fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 14)
 
 # --- Imagens ---
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
