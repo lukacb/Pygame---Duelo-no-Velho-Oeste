@@ -17,7 +17,7 @@ CINZA_FUNDO = (100, 100, 100)
 VERDE = (0, 255, 0)
 
 # --- Fontes ---
-fonte_titulo =  pygame.font.Font("PressStart2P-Regular.ttf", 20)
+fonte_titulo = pygame.font.Font("PressStart2P-Regular.ttf", 20)
 fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
 fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
@@ -25,41 +25,31 @@ fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
 
-# IMAGEM GRANDE (Tela de Explicação)
-# Vamos renomear para ficar mais claro:
 cowboy_explicacao_img = pygame.image.load("cowboysorrindo.png").convert_alpha()
 cowboy_explicacao_img = pygame.transform.scale(cowboy_explicacao_img, (largura_tela, altura_tela))
 
-# --- IMAGEM NOVA (Tela de Vitória) ---
-# Carregamos a imagem original novamente
 cowboy_vitoria_original = pygame.image.load("cowboysorrindo.png").convert_alpha()
 
-# AGORA SIM: É AQUI QUE VOCÊ MUDA O TAMANHO DA TELA FINAL
-# Exemplo: 70% da largura e altura da tela
-escala_vitoria = 0.7 
+escala_vitoria = 0.7
 largura_vitoria = int(largura_tela * escala_vitoria)
 altura_vitoria = int(altura_tela * escala_vitoria)
-
-# Criamos a variável de imagem MENOR para a vitória
 cowboy_vitoria_img = pygame.transform.scale(cowboy_vitoria_original, (largura_vitoria, altura_vitoria))
 
 
-# --- IMAGENS DOS PERSONAGENS
+# --- IMAGENS DOS PERSONAGENS ---
 LARGURA_COWBOY = 80
 ALTURA_COWBOY = 150
 
-# parado / base (usaremos a imagem de lado como pose neutra)
+# Posição base (parado)
 cowboybase_original = pygame.image.load("Cowboydelado.png").convert_alpha()
 cowboybase = pygame.transform.scale(cowboybase_original, (LARGURA_COWBOY, ALTURA_COWBOY))
 
-# andando → cowboy de lado
 walk_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydelado.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 walk_left_frames = [pygame.transform.flip(walk_right_frames[0], True, False)]
 
-# de costas → para a fase inicial
+# de costas (para a fase inicial)
 back_frames = [pygame.transform.scale(pygame.image.load("cowboydecostas.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 
-# mirando de frente
 aim_right_frames = [pygame.transform.scale(pygame.image.load("Cowboydefrente.png").convert_alpha(), (LARGURA_COWBOY, ALTURA_COWBOY))]
 aim_left_frames = [pygame.transform.flip(aim_right_frames[0], True, False)]
 
@@ -188,7 +178,7 @@ def desenhar_barra_reacao(ativo):
     tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
 
 def desenhar_placar():
-    txt = fonte_texto.render(f"Rodada {rodada}/3  P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
@@ -308,35 +298,27 @@ while rodando:
         tela.blit(instrucao, instrucao.get_rect(center=(largura_tela/2, altura_tela/2 + 50)))
 
     elif estado_jogo == "EXPLICACAO":
-        # Usamos a imagem de tela cheia
-        tela.blit(cowboy_explicacao_img, (0, 0)) # <--- MUDANÇA AQUI
+        tela.blit(cowboy_explicacao_img, (0, 0))
         desenhar_balao(falas[fala_index])
         if fala_index == len(falas) - 1:
             desenhar_botao("Começar Duelo", altura_tela - 80)
 
     # --- TELA DE CAMPEÃO (FIM DO JOGO) ---
     elif estado_jogo == "FIM" and (pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS):
+        tela.fill(PRETO)
         
-        # 1. Desenha o fundo
-        tela.fill(PRETO) 
-        
-        # 2. Calcula a posição da imagem MENOR
-        # Centraliza horizontalmente
-        pos_x = largura_tela // 2 - cowboy_vitoria_img.get_width() // 2 
+        # Calcula a posição da imagem de vitória
+        pos_x = largura_tela // 2 - cowboy_vitoria_img.get_width() // 2
         # Centraliza verticalmente e sobe 50 pixels
-        pos_y = altura_tela // 2 - cowboy_vitoria_img.get_height() // 2 - 50 
+        pos_y = altura_tela // 2 - cowboy_vitoria_img.get_height() // 2 - 50
         
-        # 3. Desenha a imagem de vitória (a menor)
-        tela.blit(cowboy_vitoria_img, (pos_x, pos_y)) # <--- MUDANÇA AQUI
+        tela.blit(cowboy_vitoria_img, (pos_x, pos_y))
         
-        # Define o campeão
         campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
         
         # --- Mensagens de vitória ---
-        # (Ajustei o Y das mensagens para ficarem abaixo da nova imagem)
-        
         # Posição Y do topo da imagem + altura da imagem + 40 pixels de espaço
-        pos_y_texto1 = pos_y + cowboy_vitoria_img.get_height() + 40 
+        pos_y_texto1 = pos_y + cowboy_vitoria_img.get_height() + 40
         
         texto_parabens = fonte_vencedor.render(f"Parabéns, {campeao}!", True, BRANCO)
         tela.blit(texto_parabens, texto_parabens.get_rect(center=(largura_tela / 2, pos_y_texto1)))
@@ -349,7 +331,6 @@ while rodando:
 
     # --- TELA DE JOGO (ANDANDO, MIRANDO, ESPERANDO, SINAL e FIM DE RODADA) ---
     else:
-        
         tela.blit(fundo_inicio, (0, 0))
         desenhar_barra_reacao(sinal_ativo)
         desenhar_placar()
@@ -361,7 +342,6 @@ while rodando:
             texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
             sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
             
-            # Desenha o texto de fim de rodada sobre os jogadores
             tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
             tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
 
@@ -369,4 +349,3 @@ while rodando:
     clock.tick(60)
 
 pygame.quit()
-            
