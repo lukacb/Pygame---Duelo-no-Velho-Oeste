@@ -22,7 +22,7 @@ fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
 fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
 # --- Sons ---
-pygame.mixer.init() # IMPORTANTE: Inicializa o módulo de som
+pygame.mixer.init() 
 
 # Carrega a música de fundo
 pygame.mixer.music.load("faroeste.mp3") 
@@ -180,27 +180,21 @@ def desenhar_balao(fala):
         y += 35
 
 def desenhar_barra_reacao(ativo):
-    # Barra abaixo do topo
     barra = pygame.Rect(largura_tela//2 - 150, 60, 300, 24)
     
-    # Fundo da barra
     pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
     
-    # Preenchimento verde quando ativo
     if ativo:
         pygame.draw.rect(tela, VERDE, barra, border_radius=10)
     pygame.draw.rect(tela, BRANCO, barra, 2, border_radius=10)
     
-    # Texto DENTRO da barra
     rotulo = "ATIRE!" if ativo else "Espere..."
     cor_texto = PRETO if ativo else BRANCO
     txt = fonte_texto.render(rotulo, True, cor_texto)
     
-    # Centraliza vertical e horizontalmente dentro da barra
     tela.blit(txt, txt.get_rect(center=barra.center))
 
 def desenhar_placar():
-    # Placar no canto superior esquerdo
     txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
@@ -334,9 +328,7 @@ while rodando:
     elif estado_jogo == "FIM" and (pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS):
         tela.fill(PRETO)
         
-        # Calcula a posição da imagem de vitória
         pos_x = largura_tela // 2 - cowboy_vitoria_img.get_width() // 2
-        # Centraliza verticalmente e sobe 50 pixels
         pos_y = altura_tela // 2 - cowboy_vitoria_img.get_height() // 2 - 50
         
         tela.blit(cowboy_vitoria_img, (pos_x, pos_y))
@@ -344,7 +336,6 @@ while rodando:
         campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
         
         # --- Mensagens de vitória ---
-        # Posição Y do topo da imagem + altura da imagem + 40 pixels de espaço
         pos_y_texto1 = pos_y + cowboy_vitoria_img.get_height() + 40
         
         texto_parabens = fonte_vencedor.render(f"Parabéns, {campeao}!", True, BRANCO)
@@ -366,11 +357,15 @@ while rodando:
 
         # Se for FIM DE RODADA (mas não o fim do jogo)
         if estado_jogo == "FIM":
-            texto = fonte_vencedor.render(f"Vencedor da rodada: {vencedor}", True, BRANCO)
+            linha1 = fonte_vencedor.render("Vencedor da rodada:", True, BRANCO)
+
+            linha2 = fonte_texto.render(f"{vencedor}", True, BRANCO)
+
             sub = fonte_texto.render("Pressione ESPAÇO para a próxima rodada", True, BRANCO)
-            
-            tela.blit(texto, texto.get_rect(center=(largura_tela/2, altura_tela/2 - 20)))
-            tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 25)))
+
+            tela.blit(linha1, linha1.get_rect(center=(largura_tela/2, altura_tela/2 - 40)))
+            tela.blit(linha2, linha2.get_rect(center=(largura_tela/2, altura_tela/2)))
+            tela.blit(sub, sub.get_rect(center=(largura_tela/2, altura_tela/2 + 35)))
 
     pygame.display.flip()
     clock.tick(60)
