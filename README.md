@@ -6,7 +6,7 @@ Um jogo rápido de reflexos e duelo no estilo Velho-Oeste, construído em Python
 
 ## Vídeo de Apresentação
 
-**[>> Clique aqui para ver o vídeo <<](https://www.youtube.com/watch?v=COLOQUE-O-RESTO-DO-SEU-LINK-AQUI)**
+**[>> Clique aqui para ver o vídeo <<](https://youtu.be/Q3TPRuwCYDo)**
 
 ---
 
