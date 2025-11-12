@@ -21,6 +21,18 @@ fonte_titulo = pygame.font.Font("PressStart2P-Regular.ttf", 20)
 fonte_texto = pygame.font.Font("PressStart2P-Regular.ttf", 14)
 fonte_vencedor = pygame.font.Font("PressStart2P-Regular.ttf", 22)
 
+# --- Sons ---
+pygame.mixer.init() # IMPORTANTE: Inicializa o módulo de som
+
+# Carrega a música de fundo
+pygame.mixer.music.load("faroeste.mp3") 
+pygame.mixer.music.play(-1)  # -1 faz a música tocar em loop
+pygame.mixer.music.set_volume(0.5) # Volume de 0.0 a 1.0
+
+# Carrega o efeito de tiro
+som_tiro = pygame.mixer.Sound("gunshot.mp3") 
+som_tiro.set_volume(1.0)
+
 # --- Imagens ---
 fundo_inicio = pygame.image.load("fundooestenovo.png").convert()
 fundo_inicio = pygame.transform.scale(fundo_inicio, (largura_tela, altura_tela))
@@ -205,10 +217,12 @@ while rodando:
         elif estado_jogo == "SINAL" and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
+                    som_tiro.play()
                     vencedor = "Atirador 1"
                     pontos_p1 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
+                    som_tiro.play()
                     vencedor = "Atirador 2"
                     pontos_p2 += 1
                     estado_jogo = "FIM"
@@ -216,10 +230,12 @@ while rodando:
         elif estado_jogo in ("ANDANDO", "ESPERANDO", "MIRANDO") and vencedor is None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
+                    som_tiro.play()
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
                     pontos_p2 += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
+                    som_tiro.play()
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
                     pontos_p1 += 1
                     estado_jogo = "FIM"
