@@ -180,16 +180,27 @@ def desenhar_balao(fala):
         y += 35
 
 def desenhar_barra_reacao(ativo):
-    barra = pygame.Rect(largura_tela//2 - 150, 20, 300, 20)
+    # Barra abaixo do topo
+    barra = pygame.Rect(largura_tela//2 - 150, 60, 300, 24)
+    
+    # Fundo da barra
     pygame.draw.rect(tela, CINZA_FUNDO, barra, border_radius=10)
+    
+    # Preenchimento verde quando ativo
     if ativo:
         pygame.draw.rect(tela, VERDE, barra, border_radius=10)
     pygame.draw.rect(tela, BRANCO, barra, 2, border_radius=10)
+    
+    # Texto DENTRO da barra
     rotulo = "ATIRE!" if ativo else "Espere..."
-    txt = fonte_texto.render(rotulo, True, BRANCO)
-    tela.blit(txt, (barra.centerx - txt.get_width()//2, barra.y - 28))
+    cor_texto = PRETO if ativo else BRANCO
+    txt = fonte_texto.render(rotulo, True, cor_texto)
+    
+    # Centraliza vertical e horizontalmente dentro da barra
+    tela.blit(txt, txt.get_rect(center=barra.center))
 
 def desenhar_placar():
+    # Placar no canto superior esquerdo
     txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
