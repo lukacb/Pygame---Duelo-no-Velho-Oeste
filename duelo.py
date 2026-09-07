@@ -4,6 +4,29 @@ import random
 pygame.init()
 pygame.font.init()
 
+class Jogador:
+    def __init__(self, tecla_disparo, direcao, pos_x, pos_y, imagem_inicial):
+        self.tecla_disparo = tecla_disparo
+        self.direcao = direcao  # -1 esquerda, 1 direita
+        self.rect = imagem_inicial.get_rect(topleft=(pos_x, pos_y))
+        self.action = "back_left" if direcao == -1 else "back_right"
+        self.frame = 0
+        self.pontos = 0
+        self.pos_x_inicial = pos_x
+        self.pos_y_inicial = pos_y
+
+
+    def mover(self, limite_esquerda, limite_direita, velocidade):
+        if self.direcao == -1:
+            self.rect.x = max(self.rect.x - velocidade, limite_esquerda)
+        else:
+            self.rect.x = min(self.rect.x + velocidade, limite_direita)
+
+    def chegou_no_limite(self, limite_esquerda, limite_direita):
+        if self.direcao == -1:
+            return self.rect.x <= limite_esquerda
+        return self.rect.x >= limite_direita
+
 # --- Configurações da Tela ---
 largura_tela = 800
 altura_tela = 600
@@ -106,22 +129,12 @@ def frame_seq(acao):
     return back_frames
 
 # --- Retângulos dos jogadores ---
-jogador1_img = back_frames[0]
-jogador2_img = back_frames[0]
-
-jogador1_rect = jogador1_img.get_rect()
-jogador2_rect = jogador2_img.get_rect()
-
 pos_y_chao = 450
-pos_x_jogador1 = 350
-pos_x_jogador2 = 400
-
-jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
-jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
-
 velocidade = 1
-direcao_jogador1 = -1
-direcao_jogador2 = 1
+
+jogador1 = Jogador(pygame.K_a, -1, 350, pos_y_chao, back_frames[0])
+jogador2 = Jogador(pygame.K_l, 1, 400, pos_y_chao, back_frames[0])
+
 limite_esquerda = 10
 limite_direita = largura_tela - LARGURA_COWBOY - 10
 
@@ -195,7 +208,7 @@ def desenhar_barra_reacao(ativo):
     tela.blit(txt, txt.get_rect(center=barra.center))
 
 def desenhar_placar():
-    txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {pontos_p1} - {pontos_p2} P2", True, BRANCO)
+    txt = fonte_texto.render(f"Rodada {rodada}/3   P1 {jogador1.pontos} - {jogador2.pontos} P2", True, BRANCO)
     tela.blit(txt, (20, 20))
 
 # --- Loop Principal ---
@@ -205,8 +218,8 @@ while rodando:
             rodando = False
 
         if estado_jogo == "INICIO":
-            pontos_p1 = 0
-            pontos_p2 = 0
+            jogador1.pontos = 0
+            jogador2.pontos = 0
             rodada = 1
             MAX_PONTOS = 2
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -224,12 +237,12 @@ while rodando:
                 if event.key == pygame.K_a:
                     som_tiro.play()
                     vencedor = "Atirador 1"
-                    pontos_p1 += 1
+                    jogador1.pontos += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     som_tiro.play()
                     vencedor = "Atirador 2"
-                    pontos_p2 += 1
+                    jogador2.pontos += 1
                     estado_jogo = "FIM"
 
         elif estado_jogo in ("ANDANDO", "ESPERANDO", "MIRANDO") and vencedor is None:
@@ -237,48 +250,40 @@ while rodando:
                 if event.key == pygame.K_a:
                     som_tiro.play()
                     vencedor = "Atirador 2 (Atirador 1 se antecipou)"
-                    pontos_p2 += 1
+                    jogador2.pontos += 1
                     estado_jogo = "FIM"
                 elif event.key == pygame.K_l:
                     som_tiro.play()
                     vencedor = "Atirador 1 (Atirador 2 se antecipou)"
-                    pontos_p1 += 1
+                    jogador1.pontos += 1
                     estado_jogo = "FIM"
 
         elif estado_jogo == "FIM":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                if pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS:
-                    pontos_p1 = pontos_p2 = 0
+                if jogador1.pontos >= MAX_PONTOS or jogador2.pontos >= MAX_PONTOS:
+                    jogador1.pontos = jogador2.pontos = 0
                     rodada = 1
                     vencedor = None
                     sinal_ativo = False
-                    jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
-                    jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
+                    jogador1.rect.topleft = (jogador1.pos_x_inicial, jogador1.pos_y_inicial)
+                    jogador2.rect.topleft = (jogador2.pos_x_inicial, jogador2.pos_y_inicial)
                     tempo_sinal = random.uniform(2.0, 5.0)
                     estado_jogo = "INICIO"
                 else:
                     rodada += 1
                     vencedor = None
                     sinal_ativo = False
-                    jogador1_rect.topleft = (pos_x_jogador1, pos_y_chao)
-                    jogador2_rect.topleft = (pos_x_jogador2, pos_y_chao)
+                    jogador1.rect.topleft = (jogador1.pos_x_inicial, jogador1.pos_y_inicial)
+                    jogador2.rect.topleft = (jogador2.pos_x_inicial, jogador2.pos_y_inicial)
                     tempo_sinal = random.uniform(2.0, 5.0)
                     estado_jogo = "ANDANDO"
 
     # --- Lógica do jogo ---
     if estado_jogo == "ANDANDO":
-        if jogador1_rect.x > limite_esquerda:
-            jogador1_rect.x += direcao_jogador1 * velocidade
-        else:
-            jogador1_rect.x = limite_esquerda
-        if jogador2_rect.x < limite_direita:
-            jogador2_rect.x += direcao_jogador2 * velocidade
-        else:
-            jogador2_rect.x = limite_direita
-        if jogador1_rect.x <= limite_esquerda and jogador2_rect.x >= limite_direita:
-            jogador1_rect.x = limite_esquerda
-            jogador2_rect.x = limite_direita
-            p1_action, p2_action = "aim_right", "aim_left"
+        jogador1.mover(limite_esquerda, limite_direita, velocidade)
+        jogador2.mover(limite_esquerda, limite_direita, velocidade)
+        if jogador1.chegou_no_limite(limite_esquerda, limite_direita) and jogador2.chegou_no_limite(limite_esquerda, limite_direita):
+            jogador1.action, jogador2.action = "aim_right", "aim_left"
             estado_jogo = "MIRANDO"
             mirando_inicio_ms = pygame.time.get_ticks()
 
@@ -296,21 +301,21 @@ while rodando:
             sinal_ativo = True
 
     if estado_jogo in ("INICIO", "EXPLICACAO"):
-        p1_action, p2_action = "back_left", "back_right"
+        jogador1.action, jogador2.action = "back_left", "back_right"
     elif estado_jogo == "ANDANDO":
-        p1_action, p2_action = "walk_left", "walk_right"
+        jogador1.action, jogador2.action = "walk_left", "walk_right"
     elif estado_jogo in ("MIRANDO", "ESPERANDO", "SINAL"):
-        p1_action, p2_action = "aim_right", "aim_left"
+        jogador1.action, jogador2.action = "aim_right", "aim_left"
 
     # --- Animação ---
     anim_timer_ms += clock.get_time()
     if anim_timer_ms >= int(1000 / anim_fps):
         anim_timer_ms = 0
-        p1_frame = (p1_frame + 1) % len(frame_seq(p1_action))
-        p2_frame = (p2_frame + 1) % len(frame_seq(p2_action))
+        jogador1.frame = (jogador1.frame + 1) % len(frame_seq(jogador1.action))
+        jogador2.frame = (jogador2.frame + 1) % len(frame_seq(jogador2.action))
 
-    jogador1_img = frame_seq(p1_action)[p1_frame]
-    jogador2_img = frame_seq(p2_action)[p2_frame]
+    jogador1_img = frame_seq(jogador1.action)[jogador1.frame]
+    jogador2_img = frame_seq(jogador2.action)[jogador2.frame]
 
     # --- Desenho ---
     if estado_jogo == "INICIO":
@@ -325,7 +330,7 @@ while rodando:
             desenhar_botao("Começar Duelo", altura_tela - 80)
 
     # --- TELA DE CAMPEÃO (FIM DO JOGO) ---
-    elif estado_jogo == "FIM" and (pontos_p1 >= MAX_PONTOS or pontos_p2 >= MAX_PONTOS):
+    elif estado_jogo == "FIM" and (jogador1.pontos >= MAX_PONTOS or jogador2.pontos >= MAX_PONTOS):
         tela.fill(PRETO)
         
         pos_x = largura_tela // 2 - cowboy_vitoria_img.get_width() // 2
@@ -333,7 +338,7 @@ while rodando:
         
         tela.blit(cowboy_vitoria_img, (pos_x, pos_y))
         
-        campeao = "Atirador 1" if pontos_p1 > pontos_p2 else "Atirador 2"
+        campeao = "Atirador 1" if jogador1.pontos > jogador2.pontos else "Atirador 2"
         
         # --- Mensagens de vitória ---
         pos_y_texto1 = pos_y + cowboy_vitoria_img.get_height() + 40
@@ -352,8 +357,8 @@ while rodando:
         tela.blit(fundo_inicio, (0, 0))
         desenhar_barra_reacao(sinal_ativo)
         desenhar_placar()
-        tela.blit(jogador1_img, jogador1_rect)
-        tela.blit(jogador2_img, jogador2_rect)
+        tela.blit(jogador1_img, jogador1.rect)
+        tela.blit(jogador2_img, jogador2.rect)
 
         # Se for FIM DE RODADA (mas não o fim do jogo)
         if estado_jogo == "FIM":
