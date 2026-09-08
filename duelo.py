@@ -27,6 +27,10 @@ class Jogador:
             return self.rect.x <= limite_esquerda
         return self.rect.x >= limite_direita
 
+    def resetar(self):
+        self.rect.topleft = (self.pos_x_inicial, self.pos_y_inicial)
+        self.frame = 0
+
 # --- Configurações da Tela ---
 largura_tela = 800
 altura_tela = 600
@@ -265,8 +269,8 @@ while rodando:
                     rodada = 1
                     vencedor = None
                     sinal_ativo = False
-                    jogador1.rect.topleft = (jogador1.pos_x_inicial, jogador1.pos_y_inicial)
-                    jogador2.rect.topleft = (jogador2.pos_x_inicial, jogador2.pos_y_inicial)
+                    jogador1.resetar()
+                    jogador2.resetar()
                     tempo_sinal = random.uniform(2.0, 5.0)
                     estado_jogo = "INICIO"
                 else:
